@@ -6,8 +6,9 @@ import (
 )
 
 type AppConfig struct {
-	DB   DBConfig
-	MQTT MQTTConfig
+	Debug bool `env:"DEBUG,required"`
+	DB    DBConfig
+	MQTT  MQTTConfig
 }
 
 type DBConfig struct {
@@ -17,9 +18,10 @@ type DBConfig struct {
 }
 
 type MQTTConfig struct {
-	BrokerURL string `env:"MQTT_BROKER_URL,required"`
-	ClientID  string `env:"MQTT_CLIENT_ID,required"`
-	Topic     string `env:"MQTT_TOPIC,required"`
+	BrokerURL      string `env:"MQTT_BROKER_URL,required"`
+	ClientID       string `env:"MQTT_CLIENT_ID,required"`
+	TopicAnalytics string `env:"MQTT_TOPIC_ANALYTICS,required"`
+	TopicWarnings  string `env:"MQTT_TOPIC_WARNINGS,required"`
 }
 
 func LoadConfig(path string) (*AppConfig, error) {
