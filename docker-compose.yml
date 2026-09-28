@@ -1,0 +1,44 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.1.2-alpine
+    ports:
+      - "1883:1883"
+    restart: unless-stopped
+    volumes:
+      - mqdata:/mosquitto/config
+      - mqdata:/mosquitto/data
+      - mqdata:/mosquitto/log
+
+  postgres:
+    image: postgres:18.6-alpine3.24
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d mydb -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  analytics:
+    image: golang:1.27.1-alpine3.24
+    build: "./analytics"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    
+volumes:
+  mqdata:
+  pgdata:
+
