@@ -22,8 +22,8 @@ type MQTTConfig struct {
 	Topic     string `env:"MQTT_TOPIC,required"`
 }
 
-func LoadConfig() (*AppConfig, error) {
-	_ = godotenv.Load("../.env")
+func LoadConfig(path string) (*AppConfig, error) {
+	_ = godotenv.Load(path)
 
 	var cfg AppConfig
 
