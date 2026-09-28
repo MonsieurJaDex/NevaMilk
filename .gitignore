@@ -29,5 +29,5 @@ go.work.sum
 .env.docker
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
