@@ -36,9 +36,29 @@ func (c *Client) worker(ctx context.Context, ch <-chan mqtt.Message, process fun
 }
 
 func (c *Client) processAnalytics(msg mqtt.Message) {
+	log := slog.With("mqtt_msg_id", msg.MessageID())
+
+	payload, device_id, err := parseMsg[float64](msg)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	c.metrics.AnalyticsBoundaryValue.WithLabelValues(payload.Category.String(), device_id.String()).Set(payload.Data)
+
 	slog.Info("Analytics", "topic", msg.Topic(), "payload", msg.Payload())
 }
 
 func (c *Client) processWarnings(msg mqtt.Message) {
-	slog.Info("Warnings", "topic", msg.Topic(), "payload", msg.Payload())
+	log := slog.With("mqtt_msg_id", msg.MessageID())
+
+	payload, _, err := parseMsg[string](msg)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	c.metrics.Warnings.WithLabelValues(payload.Category.String()).Inc()
+
+	slog.Info("Warnings", "topic", msg.Topic(), "payload", payload.Data)
 }
