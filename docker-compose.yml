@@ -28,14 +28,14 @@ services:
       start_period: 10s
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.51.0
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      # Добавлено :ro,z в конце для SELinux
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
       - promdata:/prometheus
     restart: unless-stopped
-  
   grafana:
     image: grafana/grafana
     ports:
@@ -49,6 +49,8 @@ services:
     build: "./analytics"
     env_file:
       - .env
+    environment:
+      - MQTT_CLIENT_ID=nevamilk-analytics
     ports:
       - "8080:8080"
     depends_on:
@@ -57,12 +59,16 @@ services:
       mosquitto:
         condition: service_started
 
+
   simulator:
     build:
       context: ./Sim
       dockerfile: Dockerfile
     env_file:
       - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MQTT_CLIENT_ID=nevamilk-simulator
     depends_on:
       - mosquitto
     restart: unless-stopped

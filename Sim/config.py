@@ -1,22 +1,14 @@
-# ~/NevaMilk/Sim/config.py
 import os
 
-# 1. Получаем URL брокера из окружения
-broker_url = os.getenv("MQTT_BROKER_URL", "localhost:1883")
+# 1. Берем URL из .env или ставим "mosquitto:1883" по умолчанию
+broker_url = os.getenv("MQTT_BROKER_URL", "mosquitto:1883")
 
-# 2. Если есть префикс (mqtt:// или tcp://), отрезаем его
-if "://" in broker_url:
-    broker_url = broker_url.split("://", 1)[1]
+# 2. Делим СПРАВА НАЛЕВО ровно 1 раз по двоеточию.
+# Это работает и для "mosquitto:1883", и для "mqtt://mosquitto:1883"
+BROKER_HOST, BROKER_PORT_STR = broker_url.rsplit(":", 1)
+BROKER_PORT = int(BROKER_PORT_STR)
 
-# 3. Разделяем на хост и порт
-if ":" in broker_url:
-    BROKER_HOST, port_str = broker_url.split(":", 1)
-    BROKER_PORT = int(port_str)
-else:
-    BROKER_HOST = broker_url
-    BROKER_PORT = 1883
-
-# 4. Остальные настройки
+# 3. Остальные настройки
 CLIENT_ID = os.getenv("MQTT_CLIENT_ID", "python-simulator-sensor")
 TOPIC_TELEMETRY = os.getenv("MQTT_TOPIC_ANALYTICS", "sensors/analytics")
 TOPIC_ALERTS = os.getenv("MQTT_TOPIC_WARNINGS", "sensors/warnings")
