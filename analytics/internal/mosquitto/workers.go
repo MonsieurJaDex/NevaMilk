@@ -46,6 +46,13 @@ func (c *Client) processAnalytics(msg mqtt.Message) {
 
 	c.metrics.AnalyticsBoundaryValue.WithLabelValues(payload.Category.String(), device_id.String()).Set(payload.Data)
 
+	wkey := payload.Category.String() + ":" + device_id.String()
+	mean, variance, std := c.welfordReg.Update(wkey, payload.Data)
+
+	c.metrics.AnalyticsStats.WithLabelValues(payload.Category.String(), device_id.String(), "mean").Set(mean)
+	c.metrics.AnalyticsStats.WithLabelValues(payload.Category.String(), device_id.String(), "variance").Set(variance)
+	c.metrics.AnalyticsStats.WithLabelValues(payload.Category.String(), device_id.String(), "std").Set(std)
+
 	slog.Info("Analytics", "topic", msg.Topic(), "payload", msg.Payload())
 }
 
