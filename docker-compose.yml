@@ -27,11 +27,30 @@ services:
       retries: 5
       start_period: 10s
 
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - promdata:/prometheus
+    restart: unless-stopped
+  
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - grdata:/var/lib/grafana
+
   analytics:
     image: golang:1.27.1-alpine3.24
     build: "./analytics"
     env_file:
       - .env
+    ports:
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -41,4 +60,5 @@ services:
 volumes:
   mqdata:
   pgdata:
-
+  promdata:
+  grdata:
