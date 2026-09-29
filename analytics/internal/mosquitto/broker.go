@@ -5,22 +5,26 @@ import (
 	"time"
 
 	"github.com/MonsieurJaDex/NevaMilk/m/internal/config"
+	"github.com/MonsieurJaDex/NevaMilk/m/internal/metrics"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type Client struct {
-	cfg    *config.AppConfig
-	client mqtt.Client
+	cfg     *config.AppConfig
+	client  mqtt.Client
+	metrics *metrics.Metrics
 
 	analyticsCh chan mqtt.Message
 	warningsCh  chan mqtt.Message
 }
 
-func NewClient(appConfig *config.AppConfig) *Client {
+func NewClient(appConfig *config.AppConfig, reg prometheus.Registerer) *Client {
 	c := &Client{
 		cfg:         appConfig,
 		analyticsCh: make(chan mqtt.Message, 100),
 		warningsCh:  make(chan mqtt.Message, 100),
+		metrics:     metrics.NewMetrics(reg),
 	}
 
 	opts := mqtt.NewClientOptions()

@@ -6,7 +6,8 @@ import (
 )
 
 type AppConfig struct {
-	Debug bool `env:"DEBUG,required"`
+	Debug bool   `env:"DEBUG,required"`
+	Port  uint16 `env:"ANALYSIS_PORT,required"`
 	DB    DBConfig
 	MQTT  MQTTConfig
 }

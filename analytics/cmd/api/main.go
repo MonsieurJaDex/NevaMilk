@@ -9,7 +9,9 @@ import (
 
 	"github.com/MonsieurJaDex/NevaMilk/m/internal/config"
 	"github.com/MonsieurJaDex/NevaMilk/m/internal/logger"
+	"github.com/MonsieurJaDex/NevaMilk/m/internal/metrics"
 	"github.com/MonsieurJaDex/NevaMilk/m/internal/mosquitto"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
@@ -26,7 +28,9 @@ func main() {
 	appLogger := logger.NewLogger(os.Stdout, appConfig.Debug)
 	slog.SetDefault(appLogger)
 
-	client := mosquitto.NewClient(appConfig)
+	reg := prometheus.NewRegistry()
+
+	client := mosquitto.NewClient(appConfig, reg)
 	if err := client.Connect(); err != nil {
 		slog.Error("failed to connect to MQTT", "error", err.Error())
 		os.Exit(1)
@@ -35,6 +39,9 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	pw := metrics.NewMetricsWorker(appConfig, reg)
+	pw.Run(ctx, "/metrics")
 
 	client.Run(ctx)
 

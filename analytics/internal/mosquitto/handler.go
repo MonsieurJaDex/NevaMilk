@@ -13,7 +13,10 @@ func (c *Client) handleConnection(client mqtt.Client) {
 	}
 
 	for topic, handler := range subs {
-		if token := client.Subscribe(topic, 1, handler); token.Wait() && token.Error() != nil {
+		if token := client.Subscribe(topic, 1, func(cl mqtt.Client, m mqtt.Message) {
+			c.metrics.Recieved.WithLabelValues(topic).Inc()
+			handler(cl, m)
+		}); token.Wait() && token.Error() != nil {
 			slog.Info("mqtt: subscribe %s failed: %v", topic, token.Error())
 		}
 	}
