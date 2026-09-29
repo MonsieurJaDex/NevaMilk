@@ -13,7 +13,7 @@ def main():
         sender.run()
         
     except KeyboardInterrupt:
-        print("\n Остановка пользователем.")
+        print("\nОстановка пользователем.")
     except ConnectionRefusedError:
         print("Ошибка: Не удалось подключиться к MQTT брокеру!")
     finally:
