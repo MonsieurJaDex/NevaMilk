@@ -65,7 +65,7 @@ func (c *Client) processWarnings(msg mqtt.Message) {
 		return
 	}
 
-	c.metrics.Warnings.WithLabelValues(payload.Category.String()).Inc()
+	c.metrics.Warnings.WithLabelValues(payload.Category.String(), payload.Data).Inc()
 
 	slog.Info("Warnings", "topic", msg.Topic(), "payload", payload.Data)
 }

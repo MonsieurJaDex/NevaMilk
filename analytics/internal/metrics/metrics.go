@@ -37,7 +37,7 @@ func NewMetrics(reg prometheus.Registerer) *Metrics {
 		Warnings: f.NewCounterVec(prometheus.CounterOpts{
 			Name: "device_warnings",
 			Help: "Полученные сообщения с предупреждениями от датчиков",
-		}, []string{"category"}),
+		}, []string{"category", "data"}),
 		AnalyticsBoundaryValue: f.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "analytics_bound_floats",
 			Help: "Полученные числовые метрики с плавающей точкой, вписываемые в пределы относительно нормы",
