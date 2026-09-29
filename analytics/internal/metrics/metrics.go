@@ -38,7 +38,7 @@ func NewMetrics(reg prometheus.Registerer) *Metrics {
 		AnalyticsBoundaryValue: f.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "analytics_bound_floats",
 			Help: "Полученные числовые метрики с плавающей точкой, вписываемые в пределы относительно нормы",
-		}, []string{"category"}),
+		}, []string{"category", "device_id"}),
 	}
 }
 
