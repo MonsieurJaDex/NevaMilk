@@ -35,6 +35,14 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - promdata:/prometheus
     restart: unless-stopped
+  
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - grdata:/var/lib/grafana
 
   analytics:
     image: golang:1.27.1-alpine3.24
@@ -53,3 +61,4 @@ volumes:
   mqdata:
   pgdata:
   promdata:
+  grdata:
