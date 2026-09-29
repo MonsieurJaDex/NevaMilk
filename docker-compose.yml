@@ -43,6 +43,7 @@ services:
     restart: unless-stopped
     volumes:
       - grdata:/var/lib/grafana
+      - "./grafana.ini:/etc/grafana/grafana.ini"
 
   analytics:
     image: golang:1.27.1-alpine3.24
