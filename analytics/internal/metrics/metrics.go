@@ -17,6 +17,10 @@ import (
 
 type Metrics struct {
 	Recieved *prometheus.CounterVec
+	Warnings *prometheus.CounterVec
+
+	// Аналитика показателей, представляемых пределами
+	AnalyticsBoundaryValue *prometheus.GaugeVec
 }
 
 func NewMetrics(reg prometheus.Registerer) *Metrics {
@@ -27,6 +31,14 @@ func NewMetrics(reg prometheus.Registerer) *Metrics {
 			Name: "total_recieved",
 			Help: "Общее число обработанных метрик",
 		}, []string{"topic"}),
+		Warnings: f.NewCounterVec(prometheus.CounterOpts{
+			Name: "device_warnings",
+			Help: "Полученные сообщения с предупреждениями от датчиков",
+		}, []string{"category"}),
+		AnalyticsBoundaryValue: f.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "analytics_bound_floats",
+			Help: "Полученные числовые метрики с плавающей точкой, вписываемые в пределы относительно нормы",
+		}, []string{"category"}),
 	}
 }
 
