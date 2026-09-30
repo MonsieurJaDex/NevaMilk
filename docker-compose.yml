@@ -8,6 +8,12 @@ services:
       - mqdata:/mosquitto/config
       - mqdata:/mosquitto/data
       - mqdata:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -h localhost -p 1883 -t '$$SYS/broker/version' -C 1 -W 3 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   prometheus:
     image: prom/prometheus:v2.51.0
@@ -54,10 +60,13 @@ services:
     env_file:
       - .env
     environment:
-      - PYTHONUNBUFFERED=1
-      - MQTT_CLIENT_ID=nevamilk-simulator
+      PYTHONUNBUFFERED: 1
+      MQTT_CLIENT_ID: nevamilk-simulator
+      BROKER_HOST: mosquitto
+      BROKER_PORT: "1883"
     depends_on:
-      - mosquitto
+      mosquitto:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
@@ -66,4 +75,3 @@ volumes:
   pgdata:
   promdata:
   grdata:
-  simulator:
