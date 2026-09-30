@@ -21,6 +21,9 @@ type Metrics struct {
 
 	// Аналитика показателей, представляемых пределами
 	AnalyticsBoundaryValue *prometheus.GaugeVec
+
+	// Аналитика статистических показателей относительно потока метрик
+	AnalyticsStats *prometheus.GaugeVec
 }
 
 func NewMetrics(reg prometheus.Registerer) *Metrics {
@@ -34,11 +37,15 @@ func NewMetrics(reg prometheus.Registerer) *Metrics {
 		Warnings: f.NewCounterVec(prometheus.CounterOpts{
 			Name: "device_warnings",
 			Help: "Полученные сообщения с предупреждениями от датчиков",
-		}, []string{"category"}),
+		}, []string{"category", "data"}),
 		AnalyticsBoundaryValue: f.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "analytics_bound_floats",
 			Help: "Полученные числовые метрики с плавающей точкой, вписываемые в пределы относительно нормы",
 		}, []string{"category", "device_id"}),
+		AnalyticsStats: f.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "analytics_stats",
+			Help: "Статистические показатели полученных числовых метрик",
+		}, []string{"category", "device_id", "type"}),
 	}
 }
 
@@ -55,7 +62,6 @@ func (mw *MetricsWorker) Run(ctx context.Context, path string) {
 	mux := http.NewServeMux()
 	mux.Handle(path, promhttp.HandlerFor(mw.reg, promhttp.HandlerOpts{}))
 
-	// TODO: загружать адрес из env
 	srv := &http.Server{
 		Addr:    "0.0.0.0:" + fmt.Sprint(mw.cfg.Port),
 		Handler: mux,

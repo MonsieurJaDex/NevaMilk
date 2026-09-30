@@ -1,0 +1,8 @@
+groups:
+  - name: warning
+    rules:
+      - alert: Warning
+        expr: increase(device_warnings[2m]) > 0
+        labels: {severity: critical}
+        annotations:
+          summary: "Значения датчика вышли за пределы нормы"

@@ -14,7 +14,9 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+      - ./prometheus/rules:/etc/prometheus/rules:ro,z
+
       - promdata:/prometheus
     restart: unless-stopped
   grafana:
@@ -41,20 +43,22 @@ services:
     depends_on:
       mosquitto:
         condition: service_started
+      prometheus:
+        condition: service_started
 
 
-  simulator:
-    build:
-      context: ./Sim
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=1
-      - MQTT_CLIENT_ID=nevamilk-simulator
-    depends_on:
-      - mosquitto
-    restart: unless-stopped
+  # simulator:
+  #   build:
+  #     context: ./Sim
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - MQTT_CLIENT_ID=nevamilk-simulator
+  #   depends_on:
+  #     - mosquitto
+  #   restart: unless-stopped
 
 volumes:
   mqdata:

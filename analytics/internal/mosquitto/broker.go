@@ -17,6 +17,8 @@ type Client struct {
 
 	analyticsCh chan mqtt.Message
 	warningsCh  chan mqtt.Message
+
+	welfordReg metrics.WelfordRegistry
 }
 
 func NewClient(appConfig *config.AppConfig, reg prometheus.Registerer) *Client {
@@ -25,6 +27,7 @@ func NewClient(appConfig *config.AppConfig, reg prometheus.Registerer) *Client {
 		analyticsCh: make(chan mqtt.Message, 100),
 		warningsCh:  make(chan mqtt.Message, 100),
 		metrics:     metrics.NewMetrics(reg),
+		welfordReg:  *metrics.NewWelfordRegistry(),
 	}
 
 	opts := mqtt.NewClientOptions()
