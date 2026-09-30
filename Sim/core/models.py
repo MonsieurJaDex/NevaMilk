@@ -1,7 +1,8 @@
 # core/models.py
 from dataclasses import dataclass
 from enum import Enum
-from core.schema import SensorType, Payload
+from dataclasses import dataclass
+from core.schema import SensorType, TelemetryPayload
 
 class ProcessStage(Enum):
     SMOKE_1 = ("Первое копчение", 75.0, 70.0, 80.0)  
@@ -31,12 +32,46 @@ class SensorPoint:
         out_of_range = not (self.min_norm <= self.value <= self.max_norm)
         return out_of_range and self.is_stabilized
 
-    def to_telemetry_payload(self) -> Payload:
-        return Payload(category=self.sensor_type, data=float(self.value))
+    def to_telemetry_payload(self) -> TelemetryPayload:
+        return TelemetryPayload(category=self.sensor_type, data=float(self.value))
 
-    def to_warning_payload(self) -> Payload:
+    def to_warning_payload(self) -> TelemetryPayload:
         sensor_name = str(self.sensor_type)
         if self.value > (self.max_norm or 0):
-            return Payload(category=self.sensor_type, data=f"{sensor_name} is too high")
+            return TelemetryPayload(category=self.sensor_type, data=f"{sensor_name} is too high")
         else:
-            return Payload(category=self.sensor_type, data=f"{sensor_name} is too low")
+            return TelemetryPayload(category=self.sensor_type, data=f"{sensor_name} is too low")
+
+@dataclass
+class Sensor:
+    name: str
+    sensor_type: SensorType
+    value: float
+    unit: str
+    min_norm: float | None = None
+    max_norm: float | None = None
+
+    @property
+    def is_anomaly(self) -> bool:
+        if self.min_norm is None or self.max_norm is None:
+            return False
+        return not (self.min_norm <= self.value <= self.max_norm)
+
+    def to_telemetry(self) -> TelemetryPayload:
+        """Создаёт JSON с UUID типа датчика"""
+        return TelemetryPayload(
+            uuid=self.sensor_type.get_uuid(),
+            name=self.name,
+            category=str(self.sensor_type),
+            data=float(self.value)
+        )
+
+    def to_warning(self) -> TelemetryPayload:
+        """Создаёт JSON для алерта"""
+        msg = f"{self.name} is too high" if self.value > (self.max_norm or 0) else f"{self.name} is too low"
+        return TelemetryPayload(
+            uuid=self.sensor_type.get_uuid(),
+            name=self.name,
+            category=str(self.sensor_type),
+            data=msg
+        )
