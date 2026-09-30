@@ -9,31 +9,14 @@ services:
       - mqdata:/mosquitto/data
       - mqdata:/mosquitto/log
 
-  postgres:
-    image: postgres:18.6-alpine3.24
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
-    volumes:
-      - pgdata:/var/lib/postgresql
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d mydb -h localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   prometheus:
     image: prom/prometheus:v2.51.0
     ports:
       - "9090:9090"
     volumes:
-      # Добавлено :ro,z в конце для SELinux
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+      - ./prometheus/rules:/etc/prometheus/rules:ro,z
+
       - promdata:/prometheus
     restart: unless-stopped
   grafana:
@@ -43,20 +26,24 @@ services:
     restart: unless-stopped
     volumes:
       - grdata:/var/lib/grafana
+      - "./grafana.ini:/etc/grafana/grafana.ini"
+    depends_on:
+      prometheus:
+        condition: service_started
 
   analytics:
     image: golang:1.27.1-alpine3.24
     build: "./analytics"
-    env_file:
-      - .env
     environment:
       - MQTT_CLIENT_ID=nevamilk-analytics
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
       mosquitto:
+        condition: service_started
+      prometheus:
         condition: service_started
 
 
