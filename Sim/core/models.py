@@ -1,7 +1,8 @@
 # core/models.py
 from dataclasses import dataclass
 from enum import Enum
-from core.shema import SensorType, Payload
+from dataclasses import dataclass
+from core.schema import SensorType, TelemetryPayload
 
 class ProcessStage(Enum):
     SMOKE_1 = ("Первое копчение", 75.0, 70.0, 80.0)  
@@ -11,41 +12,66 @@ class ProcessStage(Enum):
 
     def __init__(self, stage_name, target_temp, min_norm, max_norm):
         self.stage_name = stage_name
-        self.target_temp = target_temp
-        self.min_norm = min_norm
-        self.max_norm = max_norm
+        self.target_temp = float(target_temp)
+        self.min_norm = float(min_norm)
+        self.max_norm = float(max_norm)
 
 @dataclass
-class TelemetryPoint:
-    temperature: float
-    min_norm: float
-    max_norm: float
-    is_stabilized: bool = False
+class SensorPoint:
+    sensor_type: SensorType
+    value: float
+    unit: str
+    min_norm: float | None = None
+    max_norm: float | None = None
+    is_stabilized: bool = True
 
     @property
     def is_anomaly(self) -> bool:
-        """Аномалия = вне нормы И после стабилизации"""
-        out_of_range = not (self.min_norm <= self.temperature <= self.max_norm)
+        if self.min_norm is None or self.max_norm is None:
+            return False
+        out_of_range = not (self.min_norm <= self.value <= self.max_norm)
         return out_of_range and self.is_stabilized
 
-    def to_telemetry_payload(self) -> Payload[dict]:
-        """Только температура для графиков"""
-        return Payload(
-            category=SensorType.TEMPERATURE,
-            data={
-                "temperature": self.temperature
-            }
+    def to_telemetry_payload(self) -> TelemetryPayload:
+        return TelemetryPayload(category=self.sensor_type, data=float(self.value))
+
+    def to_warning_payload(self) -> TelemetryPayload:
+        sensor_name = str(self.sensor_type)
+        if self.value > (self.max_norm or 0):
+            return TelemetryPayload(category=self.sensor_type, data=f"{sensor_name} is too high")
+        else:
+            return TelemetryPayload(category=self.sensor_type, data=f"{sensor_name} is too low")
+
+@dataclass
+class Sensor:
+    name: str
+    sensor_type: SensorType
+    value: float
+    unit: str
+    min_norm: float | None = None
+    max_norm: float | None = None
+
+    @property
+    def is_anomaly(self) -> bool:
+        if self.min_norm is None or self.max_norm is None:
+            return False
+        return not (self.min_norm <= self.value <= self.max_norm)
+
+    def to_telemetry(self) -> TelemetryPayload:
+        """Создаёт JSON с UUID типа датчика"""
+        return TelemetryPayload(
+            uuid=self.sensor_type.get_uuid(),
+            name=self.name,
+            category=str(self.sensor_type),
+            data=float(self.value)
         )
 
-    def to_warning_payload(self) -> Payload[str]:
-        """Строка с сообщением об отклонении"""
-        if self.temperature > self.max_norm:
-            return Payload(
-                category=SensorType.TEMPERATURE,
-                data="temperature is too high"
-            )
-        else:
-            return Payload(
-                category=SensorType.TEMPERATURE,
-                data="temperature is too low"
-            )
+    def to_warning(self) -> TelemetryPayload:
+        """Создаёт JSON для алерта"""
+        msg = f"{self.name} is too high" if self.value > (self.max_norm or 0) else f"{self.name} is too low"
+        return TelemetryPayload(
+            uuid=self.sensor_type.get_uuid(),
+            name=self.name,
+            category=str(self.sensor_type),
+            data=msg
+        )
