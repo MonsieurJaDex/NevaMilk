@@ -43,6 +43,8 @@ services:
     depends_on:
       mosquitto:
         condition: service_started
+      prometheus:
+        condition: service_started
 
 
   # simulator:
